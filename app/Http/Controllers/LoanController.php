@@ -6,43 +6,15 @@ use Illuminate\Http\Request;
 
 class LoanController extends Controller
 {
+    private array $loans = [
+        ['id' => 1, 'nama_peminjam' => 'Siti Aminah', 'judul_buku' => 'Pemrograman Laravel untuk Pemula', 'tanggal_pinjam' => '2026-09-20', 'tanggal_kembali' => '2026-09-27', 'status' => 'dipinjam'],
+        ['id' => 2, 'nama_peminjam' => 'Budi Santoso', 'judul_buku' => 'Algoritma dan Struktur Data', 'tanggal_pinjam' => '2026-09-15', 'tanggal_kembali' => '2026-09-22', 'status' => 'dikembalikan'],
+    ];
+
     public function index()
     {
-        return 'LoanController@index';
-    }
+        $loans = $this->loans;
 
-    public function create()
-    {
-        return 'LoanController@create';
-    }
-
-    public function store(Request $request)
-    {
-        return 'LoanController@store';
-    }
-
-    public function show(string $id)
-    {
-        return "LoanController@show, id: {$id}";
-    }
-
-    public function edit(string $id)
-    {
-        return "LoanController@edit, id: {$id}";
-    }
-
-    public function update(Request $request, string $id)
-    {
-        return "LoanController@update, id: {$id}";
-    }
-
-    public function destroy(string $id)
-    {
-        return "LoanController@destroy, id: {$id}";
-    }
-
-    public function kembalikan(string $id)
-    {
-        return "LoanController@kembalikan, id: {$id}";
+        return view('loans.index', compact('loans'));
     }
 }

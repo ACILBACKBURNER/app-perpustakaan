@@ -6,33 +6,17 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    // Tambahkan data dummy kategori
+    private array $categories = [
+        ['id' => 1, 'nama_kategori' => 'Teknologi', 'deskripsi' => 'Buku seputar teknologi dan pemrograman'],
+        ['id' => 2, 'nama_kategori' => 'Novel', 'deskripsi' => 'Buku fiksi dan cerita novel'],
+        ['id' => 3, 'nama_kategori' => 'Sains', 'deskripsi' => 'Buku ilmu pengetahuan alam'],
+    ];
+
     public function index()
     {
-        return 'CategoryController@index';
-    }
+        $categories = $this->categories;
 
-    public function create()
-    {
-        return 'CategoryController@create';
-    }
-
-    public function store(Request $request)
-    {
-        return 'CategoryController@store';
-    }
-
-    public function edit(string $id)
-    {
-        return "CategoryController@edit, id: {$id}";
-    }
-
-    public function update(Request $request, string $id)
-    {
-        return "CategoryController@update, id: {$id}";
-    }
-
-    public function destroy(string $id)
-    {
-        return "CategoryController@destroy, id: {$id}";
+        return view('categories.index', compact('categories'));
     }
 }
