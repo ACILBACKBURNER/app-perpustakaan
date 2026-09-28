@@ -2,108 +2,102 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Member;
+use App\Models\Book;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class LoanController extends Controller
 {
     public function index()
     {
-        $loans = Loan::with(['member', 'loanItems.book'])->paginate(10);
+        $loans = Loan::with(['member', 'user', 'loanItems.book'])->paginate(10);
         return view('loans.index', compact('loans'));
     }
 
     public function create()
     {
-        $members = Member::where('status', 'aktif')->get();
-        $books = Book::where('stok', '>', 0)->get();
-        return view('loans.create', compact('members', 'books'));
+        $members = Member::all();
+        $books = Book::all();
+        $users = User::all();
+
+        return view('loans.create', compact('members', 'books', 'users'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'member_id' => 'required|exists:members,id',
+        $validated = $request->validate([
+            'member_id' => 'required|integer|exists:members,id',
+            'user_id' => 'required|integer|exists:users,id',
             'tanggal_pinjam' => 'required|date',
             'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
-            'books' => 'required|array|min:1',
-            'books.*' => 'exists:books,id',
+            'book_ids' => 'required|array|min:1',
+            'book_ids.*' => 'integer|exists:books,id',
         ]);
 
-        try {
-            DB::transaction(function () use ($request) {
-                // Buat data peminjaman utama
-                $loan = Loan::create([
-                    'member_id' => $request->member_id,
-                    'tanggal_pinjam' => $request->tanggal_pinjam,
-                    'tanggal_kembali' => $request->tanggal_kembali,
-                    'status' => 'dipinjam',
-                ]);
+        $loan = Loan::create([
+            'member_id' => $validated['member_id'],
+            'user_id' => $validated['user_id'],
+            'tanggal_pinjam' => $validated['tanggal_pinjam'],
+            'tanggal_kembali' => $validated['tanggal_kembali'],
+        ]);
 
-                // Simpan buku yang dipinjam ke loan_items dan kurangi stok buku
-                foreach ($request->books as $bookId) {
-                    $book = Book::findOrFail($bookId);
-                    
-                    if ($book->stok < 1) {
-                        throw new \Exception("Stok buku \"{$book->judul}\" habis.");
-                    }
-
-                    // Kurangi stok buku
-                    $book->decrement('stok');
-
-                    // Simpan ke detail peminjaman
-                    $loan->loanItems()->create([
-                        'book_id' => $book->id,
-                        'jumlah' => 1,
-                    ]);
-                }
-            });
-
-            return redirect()->route('loans.index')
-                ->with('success', 'Transaksi peminjaman berhasil dicatat.');
-
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        foreach ($validated['book_ids'] as $bookId) {
+            $loan->loanItems()->create(['book_id' => $bookId]);
         }
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Transaksi peminjaman berhasil dibuat.');
     }
 
-    public function updateStatus(string $id)
+    public function show(string $id)
     {
-        try {
-            DB::transaction(function () use ($id) {
-                $loan = Loan::with('loanItems.book')->findOrFail($id);
-                
-                if ($loan->status == 'dipinjam') {
-                    $loan->update(['status' => 'dikembalikan']);
+        $loan = Loan::with(['member', 'user', 'loanItems.book'])->findOrFail($id);
+        return view('loans.show', compact('loan'));
+    }
 
-                    // Kembalikan stok buku
-                    foreach ($loan->loanItems as $item) {
-                        $item->book->increment('stok', $item->jumlah);
-                    }
-                }
-            });
+    public function edit(string $id)
+    {
+        $loan = Loan::with(['member', 'user', 'loanItems.book'])->findOrFail($id);
+        return view('loans.edit', compact('loan'));
+    }
 
-            return redirect()->route('loans.index')
-                ->with('success', 'Status peminjaman diubah menjadi dikembalikan, stok buku telah dipulihkan.');
+    public function update(Request $request, string $id)
+    {
+        $loan = Loan::findOrFail($id);
 
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
-        }
+        $validated = $request->validate([
+            'tanggal_kembali' => 'required|date|after_or_equal:tanggal_pinjam',
+            'status' => 'required|in:dipinjam,dikembalikan,terlambat',
+        ]);
+
+        $loan->update($validated);
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Transaksi peminjaman berhasil diperbarui.');
     }
 
     public function destroy(string $id)
     {
         $loan = Loan::findOrFail($id);
-        
-        if ($loan->status == 'dipinjam') {
-            return back()->withErrors(['error' => 'Peminjaman yang masih aktif (belum dikembalikan) tidak dapat dihapus.']);
-        }
-
+        $loan->loanItems()->delete();
         $loan->delete();
+
         return redirect()->route('loans.index')
-            ->with('success', 'Data transaksi peminjaman berhasil dihapus.');
+            ->with('success', 'Transaksi peminjaman berhasil dihapus.');
+    }
+    
+    public function kembalikan(string $id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        $loan->update([
+            'status' => 'dikembalikan',
+            'tanggal_dikembalikan' => now()->toDateString(),
+        ]);
+
+        return redirect()->route('loans.index')
+            ->with('success', 'Buku berhasil dikembalikan.');
     }
 }

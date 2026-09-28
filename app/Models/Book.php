@@ -11,9 +11,13 @@ class Book extends Model
         'isbn', 'stok', 'category_id', 'sampul',
     ];
 
-    // Letakkan method relasi di sini
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
+ public function category()
+{
+    return $this->belongsTo(Category::class);
+}
+
+public function loanItems()
+{
+    return $this->hasMany(LoanItem::class);
+}
 }

@@ -21,42 +21,46 @@
     @endif
 
     <table>
-        <thead>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>NIM</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($members as $index => $member)
             <tr>
-                <th>No</th>
-                <th>Nama</th>
-                <th>NIM</th>
-                <th>Email</th>
-                <th>Telepon</th>
-                <th>Status</th>
-                <th>Aksi</th>
+                <td>{{ $members->firstItem() + $index }}</td>
+                <td>{{ $member->nama }}</td>
+                <td>{{ $member->nim }}</td>
+                <td>{{ $member->email }}</td>
+                <td>
+                    @if ($member->status === 'aktif')
+                        <span class="badge badge-success">Aktif</span>
+                    @else
+                        <span class="badge badge-danger">Nonaktif</span>
+                    @endif
+                </td>
+                <td>
+                    {{-- TAMBAHKAN LINK DETAIL INI --}}
+                    <a href="{{ route('members.show', $member->id) }}">Detail</a>
+                    |
+                    <a href="{{ route('members.edit', $member->id) }}">Edit</a>
+                    |
+                    <form action="{{ route('members.destroy', $member->id) }}" method="POST" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" onclick="return confirm('Yakin ingin menghapus anggota ini?')">Hapus</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($members as $index => $member)
-                <tr>
-                    <td>{{ $members->firstItem() + $index }}</td>
-                    <td>{{ $member->nama }}</td>
-                    <td>{{ $member->nim }}</td>
-                    <td>{{ $member->email }}</td>
-                    <td>{{ $member->nomor_telepon ?? '-' }}</td>
-                    <td>{{ ucfirst($member->status) }}</td>
-                    <td>
-                        <a href="{{ route('members.edit', $member->id) }}">Edit</a>
-                        <form action="{{ route('members.destroy', $member->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" style="color: red; background: none; border: none; cursor: pointer;">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7" style="text-align: center;">Belum ada data anggota.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+        @endforeach
+    </tbody>
+</table>
 
     <div style="margin-top: 20px;">
         {{ $members->links() }}

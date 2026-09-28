@@ -32,4 +32,4 @@ Route::resource('members', MemberController::class);
 
 // Route CRUD & Transaksi Peminjaman (Loans)
 Route::resource('loans', LoanController::class);
-Route::patch('/loans/{id}/return', [LoanController::class, 'updateStatus'])->name('loans.updateStatus');
+Route::patch('/loans/{id}/return', [LoanController::class, 'kembalikan'])->name('loans.kembalikan');

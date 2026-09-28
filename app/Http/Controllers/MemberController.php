@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMemberRequest;
 use App\Models\Member;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,6 @@ class MemberController extends Controller
     public function index()
     {
         $members = Member::paginate(10);
-
         return view('members.index', compact('members'));
     }
 
@@ -19,17 +19,9 @@ class MemberController extends Controller
         return view('members.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreMemberRequest $request)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:100',
-            'nim' => 'required|string|max:20|unique:members,nim',
-            'email' => 'required|email|max:100|unique:members,email',
-            'nomor_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'status' => 'required|in:aktif,non-aktif',
-        ]);
-
+        $validated = $request->validated();
         Member::create($validated);
 
         return redirect()->route('members.index')
@@ -38,14 +30,15 @@ class MemberController extends Controller
 
     public function show(string $id)
     {
-        $member = Member::findOrFail($id);
+        // Memuat data anggota beserta relasi loans, loanItems, book, dan user
+        $member = Member::with(['loans.loanItems.book', 'loans.user'])->findOrFail($id);
+        
         return view('members.show', compact('member'));
     }
 
     public function edit(string $id)
     {
         $member = Member::findOrFail($id);
-
         return view('members.edit', compact('member'));
     }
 
@@ -55,11 +48,11 @@ class MemberController extends Controller
 
         $validated = $request->validate([
             'nama' => 'required|string|max:100',
-            'nim' => 'required|string|max:20|unique:members,nim,' . $member->id,
-            'email' => 'required|email|max:100|unique:members,email,' . $member->id,
-            'nomor_telepon' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-            'status' => 'required|in:aktif,non-aktif',
+            'nim' => 'required|string|max:20|unique:members,nim,'.$member->id,
+            'email' => 'required|email|max:100|unique:members,email,'.$member->id,
+            'nomor_telepon' => 'required|string|max:15',
+            'alamat' => 'required|string',
+            'status' => 'required|in:aktif,nonaktif',
         ]);
 
         $member->update($validated);

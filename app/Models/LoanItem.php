@@ -16,12 +16,12 @@ class LoanItem extends Model
     ];
 
     public function loan()
-    {
-        return $this->belongsTo(Loan::class);
-    }
+{
+    return $this->belongsTo(Loan::class);
+}
 
-    public function book()
-    {
-        return $this->belongsTo(Book::class);
-    }
+public function book()
+{
+    return $this->belongsTo(Book::class);
+}
 }

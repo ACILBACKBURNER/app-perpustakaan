@@ -49,26 +49,35 @@
                     <td>{{ $loan->tanggal_pinjam }}</td>
                     <td>{{ $loan->tanggal_kembali }}</td>
                     <td>
-                        @if($loan->status == 'dipinjam')
-                            <span class="badge-active">Dipinjam</span>
-                        @else
-                            <span class="badge-returned">Dikembalikan</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if($loan->status == 'dipinjam')
-                            <form action="{{ route('loans.updateStatus', $loan->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Ubah status menjadi dikembalikan?')">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" style="background: #10b981; color: white; border: none; padding: 4px 8px; cursor: pointer; border-radius: 3px;">Kembalikan</button>
-                            </form>
-                        @endif
-                        <form action="{{ route('loans.destroy', $loan->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" style="color: red; background: none; border: none; cursor: pointer;">Hapus</button>
-                        </form>
-                    </td>
+    @if ($loan['status'] === 'dipinjam')
+        <span class="badge badge-warning">Dipinjam</span>
+    @elseif ($loan['status'] === 'dikembalikan')
+        <span class="badge badge-success">Dikembalikan</span>
+    @else
+        <span class="badge badge-danger">Terlambat</span>
+    @endif
+</td>
+<td>
+    <a href="{{ route('loans.show', $loan['id']) }}">Detail</a>
+    |
+    <a href="{{ route('loans.edit', $loan['id']) }}">Edit</a>
+    
+    @if ($loan['status'] === 'dipinjam')
+        |
+        <form class="inline" action="{{ route('loans.kembalikan', $loan['id']) }}" method="POST">
+            @csrf
+            @method('PATCH')
+            <button type="submit" onclick="return confirm('Kembalikan buku ini?')">Kembalikan</button>
+        </form>
+    @endif
+
+    |
+    <form class="inline" action="{{ route('loans.destroy', $loan['id']) }}" method="POST">
+        @csrf
+        @method('DELETE')
+        <button type="submit" onclick="return confirm('Hapus data ini?')">Hapus</button>
+    </form>
+</td>
                 </tr>
             @empty
                 <tr>
