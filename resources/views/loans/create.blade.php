@@ -10,6 +10,7 @@
         .error { color: #b91c1c; font-size: 14px; margin-top: 4px; }
         .btn { margin-top: 20px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
         .checkbox-group { margin-top: 6px; max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 8px; }
+        .info-petugas { background: #e2e8f0; padding: 8px 12px; border-radius: 4px; margin-top: 12px; font-size: 14px; color: #334155; }
     </style>
 </head>
 <body>
@@ -24,6 +25,11 @@
 
     <form action="{{ route('loans.store') }}" method="POST">
         @csrf
+
+        <!-- Informasi Petugas Otomatis dari Akun Login (Langkah 7) -->
+        <div class="info-petugas">
+            <em>Petugas pencatat: <strong>{{ auth()->user()->name }}</strong> (otomatis dari akun yang login).</em>
+        </div>
 
         <label for="member_id">Pilih Anggota</label>
         <select name="member_id" id="member_id">
@@ -46,7 +52,8 @@
             @foreach($books as $book)
                 <div>
                     <label style="font-weight: normal;">
-                        <input type="checkbox" name="books[]" value="{{ $book->id }}">
+                        <!-- Perhatikan name diubah menjadi book_ids[] agar sesuai dengan validasi controller -->
+                        <input type="checkbox" name="book_ids[]" value="{{ $book->id }}" {{ in_array($book->id, old('book_ids', [])) ? 'checked' : '' }}>
                         {{ $book->judul }} (Stok: {{ $book->stok }})
                     </label>
                 </div>
